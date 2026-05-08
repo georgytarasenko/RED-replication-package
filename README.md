@@ -1,6 +1,6 @@
 # RED: Russian Electoral Data — Replication Package
 
-**Citation:** Bogatyrev, K., Tarasenko, G., & Savin, N. *RED: Russian Electoral Data*. *Scientific Data*. <https://doi.org/10.7910/DVN/KOAUEP>
+**Citation:** Tarasenko, Georgy; Bogatyrev, Konstantin; Savin, Nikita, 2026, "Russian Election Data", <https://doi.org/10.7910/DVN/DFGNTP>, Harvard Dataverse, V1
 
 ---
 
