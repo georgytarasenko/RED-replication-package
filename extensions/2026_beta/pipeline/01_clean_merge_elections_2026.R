@@ -1,0 +1,1148 @@
+### Сreate and clean a standardized dataset from raw electoral data 
+### Harmonize territorial electoral commissions (TIKs)
+### run via 00_master.R that loads the packages
+### 2026 VERSION (matching sandbox): adds the 2026 State Duma election (party list, research snapshot 2026-09-30)
+### via scripts/01b_read_2026.R. Every 2026-specific line is marked '2026'. Rows for 2000-2024 are unchanged.
+
+
+
+# 1. Clean each election ----
+# Silence readr messages globally
+options(readr.show_col_types = FALSE)
+
+## 1.1. Presidential elections ----
+pres_2000 <- read_csv("data/raw_votes/2000.csv") %>%
+  mutate(year = 2000,
+         type = 'pres') %>%
+  select(year, type, region, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 9,
+         turnout_onsite = 8,
+         turnout_absentee = 20,
+         invalid = 13,
+         valid = 12,
+         Putin = 31,
+         Zyuganov = 28,
+         Zhirinovsky = 27,
+         Yavlinskiy = 35,
+         Tuleev = 34,
+         Titov_K = 33,
+         Pamfilova = 29,
+         against_all = 36
+         ) 
+
+# Add data from Sakha (Yakutiya) 
+sakha2000 <- read_csv("data/raw_votes/2000_sakha.csv") %>%
+  select(year, type, region, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 9,
+         turnout_onsite = 8,
+         turnout_absentee = 20,
+         invalid = 13,
+         valid = 12,
+         Putin = 29,
+         Zyuganov = 26,
+         Zhirinovsky = 25,
+         Yavlinskiy = 33,
+         Tuleev = 32,
+         Titov_K = 31,
+         Pamfilova = 27,
+         against_all = 34)
+ 
+pres_2000 <- rbind(pres_2000, sakha2000)
+
+pres_2004 <- read_csv("data/raw_votes/2004.csv") %>%
+  mutate(year = 2004,
+         type = 'pres') %>%
+  select(year, type, region, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 8,
+         turnout_onsite = 7,
+         turnout_absentee = 16,
+         invalid = 12,
+         valid = 13,
+         Putin = 24,
+         Kharitonov = 26,
+         Malyshkin = 22,
+         Glazyev = 21,
+         Khakamada = 25,
+         Mironov = 23,
+         against_all = 27
+) 
+
+
+pres_2008 <- read_csv("data/raw_votes/2008.csv") %>%
+  mutate(year = 2008,
+         type = 'pres') %>%
+  select(year, type, region, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 8,
+         turnout_onsite = 7,
+         turnout_absentee = 16,
+         invalid = 12,
+         valid = 13,
+         Medvedev = 26,
+         Zyuganov = 25,
+         Zhirinovsky = 24,
+         Bogdanov = 23
+  ) 
+
+pres_2012 <- read_csv("data/raw_votes/2012.csv") %>%
+  mutate(year = 2012,
+         type = 'pres') %>%
+  select(year, type, region, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 8,
+         turnout_onsite = 7,
+         turnout_absentee = 16,
+         invalid = 12,
+         valid = 13,
+         Putin = 26,
+         Zyuganov = 23,
+         Zhirinovsky = 22,
+         Prokhorov = 25,
+         Mironov = 24
+  )
+
+pres_2018 <- read_csv("data/raw_votes/2018.csv") %>%
+  mutate(year = 2018,
+         type = 'pres') %>%
+  select(year, type, region, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 8,
+         turnout_onsite = 7,
+         invalid = 12,
+         valid = 13,
+         Putin = 19,
+         Grudinin = 17,
+         Zhirinovsky = 18,
+         Sobchak = 20,
+         Yavlinskiy = 23,
+         Titov_B = 22,
+         Suraykin = 21,
+         Baburin = 16
+  ) 
+
+pres_2024 <- read_csv("data/raw_votes/2024.csv") %>%
+  mutate(year = 2024,
+         type = 'pres') %>%
+  select(year, type, region, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 8,
+         turnout_onsite = 7,
+         invalid = 12,
+         valid = 13,
+         Putin = 17,
+         Kharitonov = 19,
+         Slutsky = 18,
+         Davankov  = 16
+  ) %>%
+  mutate(uik = as.numeric(str_remove(uik, "УИК №"))) 
+
+## 1.2. Parliamentary elections ----
+parl_2003 <- read_csv("data/raw_votes/2003.csv") %>%
+  mutate(year = 2003,
+         type = 'parl') %>%
+  select(year, type, region, oik, tik, uik,
+         electorate = 5,
+         turnout_early = 7,
+         turnout_offsite = 9,
+         turnout_onsite = 8,
+         turnout_absentee = 17,
+         invalid = 13,
+         valid = 14,
+         UR = 41,
+         KPRF = 44,
+         LDPR = 39,
+         Rodina = 37,
+         Yabloko = 25,
+         SPS = 23,
+         APR = 31,
+         RPPSS = 24,
+         PVR = 40,
+         NP = 33,
+         Yedineniye = 22,
+         NKAR = 28,
+         ZaRusSvyuatuyu = 26,
+         Zelenye = 30,
+         # added parties present in 2003
+         Rus = 27,                 # "Объединенная Российская партия 'Русь'"
+         NRPR = 29,                # "Народно-республиканская партия России"
+         IstinnyePatrioty = 32,    # "Истинные патриоты России"
+         DPR = 34,                 # "Демократическая партия России"
+         VRES = 35,                # "Великая Россия - Евразийский Союз"
+         SLON = 36,                # "Партия СЛОН"
+         PME = 38,                 # "Партия Мира и Единства (ПМЕ)"
+         RCDP = 42,                # "Российская Конституционно-демократическая партия"
+         BizDev = 43,              # "Развитие предпринимательства"
+         against_all = 45
+  )
+
+
+parl_2007 <- read_csv("data/raw_votes/2007.csv") %>%
+  mutate(year = 2007,
+         type = 'parl',
+         oik = NA) %>%
+  select(year, type, region, oik, tik, uik,
+         electorate = 5,
+         turnout_early = 7,
+         turnout_offsite = 9,
+         turnout_onsite = 8,
+         turnout_absentee = 17,
+         invalid = 13,
+         valid = 14,
+         UR = 33,
+         KPRF = 27,
+         LDPR = 30,
+         SR = 31,
+         APR = 24,
+         Yabloko = 34,
+         GS = 25,
+         DPR = 26,        
+         SPS = 28,
+         PSS = 29,        
+         Patrioty = 32
+  )
+
+
+parl_2011 <- read_csv("data/raw_votes/2011.csv") %>%
+  mutate(year = 2011,
+         type = 'parl',
+         oik = NA) %>%
+  select(year, type, region, oik, tik, uik,
+         electorate = 4,
+         turnout_early = 6,
+         turnout_offsite = 8,
+         turnout_onsite = 7,
+         turnout_absentee = 16,
+         invalid = 12,
+         valid = 13,
+         UR = 27,
+         KPRF = 25,
+         LDPR = 23,
+         SR = 22,
+         Yabloko = 26,
+         Patrioty = 24,
+         PDPS = 28
+  )
+
+parl_2016 <- read_csv("data/raw_votes/2016.csv") %>%
+  mutate(year = 2016,
+         type = 'parl') %>%
+  select(year, type, region, oik, tik, uik,
+         electorate = 5,
+         turnout_early = 7,
+         turnout_offsite = 9,
+         turnout_onsite = 8,
+         turnout_absentee = 16,
+         invalid = 13,
+         valid = 14,
+         Rodina = 23,
+         KPKR = 24,
+         RPPSS = 25,
+         UR = 26,
+         Zelenye = 27,
+         GrazhdPlatforma = 28,  
+         LDPR = 29,
+         PARNAS = 30,
+         PDPS = 31,
+         GS = 32,               
+         Yabloko = 33,
+         KPRF = 34,
+         Patrioty = 35,
+         SR = 36
+  )
+
+
+parl_2021 <- read_csv("data/raw_votes/2021.csv") %>%
+  mutate(year = 2021,
+         type = 'parl') %>%
+  select(year, type, region, oik, tik, uik,
+         electorate = 6,
+         turnout_early = 8,
+         turnout_offsite = 10,
+         turnout_onsite = 9,
+         invalid = 14,
+         valid = 15,
+         KPRF = 18,
+         Zelenye = 19,
+         LDPR = 20,
+         NovyeLyudi = 21,
+         UR = 22,
+         SR = 23,
+         Yabloko = 24,
+         PDPS = 25,
+         RPSS = 26,
+         KPKR = 27,
+         GrazhdPlatforma = 28,     
+         ZelAlternativa = 29,      
+         Rodina = 30,
+         PartiyaPensionerov = 31   
+  ) %>%
+  mutate(
+    oik = str_remove(oik, "ОИК №"),
+    uik = as.numeric(str_remove(uik, "УИК №"))
+  )
+
+
+## 1.3. 2026 State Duma election (party list only; snapshot of 2026-09-30) ----
+source("scripts/01b_read_2026.R", encoding = "UTF-8")   # creates parl_2026, parl_2026_online, precinct_aux_2026, clean_tik_2026()
+
+# 2. Combine the years ----
+elec_all <- bind_rows(pres_2000, pres_2004, pres_2008, pres_2012, pres_2018, pres_2024,
+                      parl_2003, parl_2007, parl_2011, parl_2016, parl_2021, parl_2026) %>%
+  # split electoral district numbers and names into separate variables
+  separate(oik, into = c("oik_old", "oik_name_old"), sep = "\\s+", extra = "merge", fill = "right") %>%
+  mutate(oik_old = as.integer(trimws(oik_old))) # clean the district number
+
+
+# 3. Harmonize alphabets ----
+
+# Define the vector for Latin to Russian character replacements
+latin_to_cyrillic <- c(
+  "a" = "а", "A" = "А", "B" = "В", "c" = "с", "C" = "С", "e" = "е", "E" = "Е",
+  "H" = "Н", "K" = "К", "M" = "М",  "o" = "о", "O" = "О", "p" = "р", "P" = "Р",
+  "T" = "Т", "x" = "х", "X" = "Х",  "y" = "у", "ё" = "е") # also remove ё dots
+
+# Replace all the latin letter incursions while whe dataframe is still fully cyrillic
+elec_all <- elec_all %>%
+  mutate(tik = str_replace_all(tik, setNames(latin_to_cyrillic, names(latin_to_cyrillic))))  
+
+# 4. Clean online voting ----
+
+# 2021
+elec_all <- elec_all %>%
+  mutate(
+    tik_old = tik,    # store original TIK values
+    tik = case_when(
+      year == 2021 & tik == "Дистанционное электронное голосование" ~ "online_voting",
+      year == 2021 & region == "город Москва" & uik >= 5001 & uik <= 5015 ~ "online_voting",
+      TRUE ~ tik
+    ),
+    # remove meaningless precinct numbers from online votes since they are aggregate as a higher level
+    uik = if_else(year == 2021 & tik == "online_voting", NA_real_, uik),
+    # reclassify online votes incorrectly put into the onsite column
+    turnout_online = if_else(year == 2021 & tik == "online_voting", turnout_onsite, NA_real_),
+    turnout_onsite = if_else(year == 2021 & tik == "online_voting", NA_real_, turnout_onsite)
+  ) %>%
+  relocate(turnout_online, .after = turnout_early)
+
+# 2024
+pres_2024_online <- read_csv("data/raw_votes/2024-electronic-voting.csv") %>%
+  mutate(year = 2024,
+         type = 'pres',
+         tik = "online_voting") %>%
+  select(year, type, region, tik,
+         electorate = 2,
+         turnout_online = 5,
+         invalid = 10,
+         valid = 11,
+         Putin = 15,
+         Kharitonov = 17,
+         Slutsky = 16,
+         Davankov  = 14
+  ) 
+
+# append to elec_all
+elec_all <- bind_rows(elec_all, pres_2024_online)
+
+# 2026: DEG rows by single-member district (as in 2021) and tag-stripping of the raw 2026 TIK names (tik_old stays raw)
+elec_all <- bind_rows(elec_all, parl_2026_online) %>%
+  mutate(tik = if_else(year == 2026 & tik != "online_voting", clean_tik_2026(tik), tik))
+
+
+rm(pres_2000, sakha2000, pres_2004, pres_2008, pres_2012, pres_2018, pres_2024,
+   parl_2003, parl_2007, parl_2011, parl_2016, parl_2021, pres_2024_online,
+   latin_to_cyrillic)
+
+
+# 5. Add source columns ----
+
+elec_all <- elec_all %>%
+  mutate(
+    source_primary = case_when(
+      region == "Республика Саха (Якутия)" & year == 2000 ~ "Mikhailov et al. 2000, Electoral Handbook [see reference in the data descriptor]",
+      year == 2026 ~ "apps.cikrf.ru (CEC public API, report 242), collected 2026-09-30",     # 2026
+      TRUE ~ "www.izbirkom.ru"
+    ),
+    source_secondary = case_when(
+      region == "Республика Саха (Якутия)" & year == 2000 ~ NA_character_,
+      year == 2026 ~ "https://github.com/Spiceman161/duma-election-2026 (research snapshot 2026-09-30, not certified results)",  # 2026
+      TRUE ~ "https://github.com/dkobak/elections/tree/master/data"
+    )
+  )
+
+
+# 6. Harmonize regions, electoral district and municipal commissions ----
+
+# remove territories that are not internationally recognized as Russian territory
+elec_all <- elec_all %>%  
+  filter(!region %in% c("Республика Крым", "город Севастополь", "Луганская Народная Республика", 
+                        "Донецкая Народная Республика", "Запорожская область", "Херсонская область", 
+                        "Город Байконур (Республика Казахстан)", "98 Город Байконур (Республика Казахстан)", 
+                        "99 Территория за пределами РФ", "Территория за пределами РФ", "Зарубежная территория"),
+         !tik %in% c("Территория за пределами РФ", "Город Байконур (Республика Казахстан)",
+                     "Байконур", "101 Байконур", "74 Байконурская городская", "Байконурская городская"))
+
+# harmonize names of regions and electoral districts
+elec_all <- elec_all %>% 
+  mutate(
+    # harmonize regions
+    region = case_when(
+      region == "Город Москва" ~ "город Москва",
+      region == "Город Санкт-Петербург" ~ "город Санкт-Петербург", 
+      region == "Агинский Бурятский автономный округ" ~ "Забайкальский край",
+      region == "Читинская область" ~ "Забайкальский край",
+      region == "Усть-Ордынский Бурятский автономный округ" ~ "Иркутская область",
+      region == "Камчатская область" ~ "Камчатский край", 
+      region == "Корякский автономный округ" ~ "Камчатский край", 
+      region == "Кемеровская область" ~ "Кемеровская область - Кузбасс", 
+      region == "Таймырский (Долгано-Ненецкий) автономный округ" ~ "Красноярский край", 
+      region == "Эвенкийский автономный округ" ~ "Красноярский край", 
+      region == "Коми-Пермяцкий автономный округ" ~ "Пермский край",
+      region == "Пермская область" ~ "Пермский край", 
+      region == "Ханты-Мансийский автономный округ" ~ "Ханты-Мансийский автономный округ - Югра", 
+      region == "Чувашская Республика - Чаваш республики" ~ "Чувашская Республика - Чувашия", 
+      TRUE ~ region),
+    ## harmonize SMDs: replace old region names
+    oik_name_old = str_replace(oik_name_old, "Агинский Бурятский автономный округ", "Забайкальский край"),
+    oik_name_old = str_replace(oik_name_old, "Город Москва", "город Москва"),
+    oik_name_old = str_replace(oik_name_old, "Город Санкт-Петербург", "город Санкт-Петербург"),
+    oik_name_old = str_replace(oik_name_old, "^((\\d+\\s)?Кемеровская область)(\\s*-\\s*)", "\\1 - Кузбасс\\3"),
+    oik_name_old = str_replace(oik_name_old, "Усть-Ордынский Бурятский автономный округ", "Иркутская область"),    
+    oik_name_old = str_replace(oik_name_old, "Читинская область", "Забайкальский край"),
+    ## remove region from district name
+    oik_name_old = str_replace(oik_name_old,  paste0("^", str_replace_all(region, "([\\^$.|?*+(){}])", "\\\\\\1"), "\\s*-\\s*"),  "")
+    )
+
+# harmonize naming conventions for territorial commissions (TIKs)
+elec_all <- elec_all %>%
+  mutate(
+    tik = str_remove_all(tik, "^\\d+\\s"),   # remove the TIK number at the start
+    tik = str_remove_all(tik, "N|№"),                                                    # remove the number signs
+    tik = case_when(                         # harmonizing the TIKs that had a rayonnaya namesake before deleting raion in the next line
+      year == 2003 & region == "Ростовская область" & tik == "Волгодонская" ~ "Волгодонская городская",
+      year == 2003 & region == "Ростовская область" & tik == "Азовская" ~ "Азовская городская",
+      TRUE ~ tik),
+    tik = str_remove_all(tik, "\\b(?i)(тик|по|районная|территор\\w*|избир\\w*|комиссия|админ\\w*)\\b\\s*"), # auxiliary words
+    tik = str_squish(tik),                                                               # replace multiple spaces with a single space
+    tik = str_trim(tik),                                                                 # remove leading and trailing spaces
+    tik = if_else(str_detect(tik, "^(?i)(район[а]?|ЗАТО п.|ЗАТО|ГО ЗАТО)\\s") & 
+                    str_detect(tik, "[иыо]й$"), str_replace(tik, "[иыо]й$", "ая"), tik), # replace masc w/ fem endings
+    tik = str_remove(tik, "^(?i)(район[а]?|ЗАТО п.|ЗАТО|ГО ЗАТО)\\s"),                   # remove "district"/"closed town" start
+    tik = str_remove(tik, "^(?i)(поселок|р.п.|пгт|\\(пгт\\)|рабочего поселка \\(п.г.т.\\))?\\s*"), # remove "township" start
+    tik = str_remove(tik, "^(?i)(г\\.\\s?|город\\s|города\\s|городу\\s)?"),              # remove "city/town" start
+    tik = str_replace_all(tik, "(?i)([иыо]й (район|округ)|ого (района|округа|МР)|ому району)$", "ая"), # replace "district" ending
+    tik = str_replace_all(tik, "\\s*-\\s*", "-"),                                          # remove spaces around hyphens
+    tik = case_when(region == "город Санкт-Петербург" ~ str_extract(tik, "\\d+$"),       # shorten St Pete tiks to numbers
+                    # delete "городская/поселковая/курортная" if no ambiguity & just deletion will standardize
+                    str_detect(region, "^(Мурма\\w*|Сарат\\w*|Смол\\w|Тул\\w|Ярос\\w)") |
+                      str_detect(region, "^\\w+\\s+(Калмыкия|Карелия|Коми|Хакасия)$") |
+                      region == "Алтайский край" & str_detect(tik, "^Сибирская г\\w*") |
+                      region == "Амурская область" & str_detect(tik, "^Угл\\w* п\\w*") |
+                      region == "Архангельская область" & str_detect(tik, "^(Коряж\\w*|Мирн\\w*|Новодв\\w*|Северод\\w*|Солов\\w*) (г\\w*|п\\w*)") |
+                      region == "Астраханская область" & str_detect(tik, "^Знаменская г\\w*") |
+                      region == "Владимирская область" & str_detect(tik, "^Радужная г\\w*") |
+                      region == "Ивановская область" & str_detect(tik, "^Кохомская г\\w*") |
+                      region == "Иркутская область" & str_detect(tik, "^(Ангарская|Саянская|Свирская|Усть-Кутская) г\\w*") |
+                      region == "Калининградская область" & str_detect(tik, "^(Пионерская|Советская) г\\w*") |
+                      region == "Камчатский край" & str_detect(tik, "^(Вилюч\\w*|Петропавл\\w*) г\\w*") |
+                      str_detect(region, "Карач\\w*") & str_detect(tik, "^(Карач\\w*|Черкес\\w*) г\\w*") |
+                      str_detect(region, "Кемер\\w*") & str_detect(tik, "^Таштагольская г\\w*") |
+                      region == "Кировская область" & str_detect(tik, "^Первомайская п\\w*") |
+                      region == "Краснодарский край" & str_detect(tik, "^(Анапская|Арма\\w*|Белор\\w*|Геле\\w*|Горя\\w*|Кроп\\w*|Лаби\\w*) (г\\w*|к\\w*)") |
+                      region == "Магаданская область" & str_detect(tik, "^Магаданская г\\w*") |
+                      region == "Московская область" & !str_detect(tik, "^Серпуховская г\\w*") |
+                      region == "Нижегородская область" & str_detect(tik, "^Саровская г\\w*") |
+                      region == "Новосибирская область" & str_detect(tik, "^(Бердская|Коль\\w*) (г\\w*|п\\w*)") |
+                      region == "Оренбургская область" & str_detect(tik, "^(Абду\\w*|Коль\\w*|Кува\\w*|Соль\\w*|Ясн\\w*) г\\w*") |
+                      region == "Пермский край" & !str_detect(tik, "^(Куды\\w*|Кунг\\w*|Соли\\w*) г\\w*") |
+                      region == "Приморский край" & !str_detect(tik, "^(Дальнере\\w*|Парт\\w*|Спас\\w*) г\\w*") |
+                      str_detect(region, "Башк\\w*") & !str_detect(tik, "^(Сала\\w*|Стер\\w*|Спас\\w*) г\\w*") |
+                      str_detect(region, "Ингу\\w*") & str_detect(tik, "^(Караб\\w*|Магас\\w*) г\\w*") |
+                      str_detect(region, "Тыва") & str_detect(tik, "^Ак-Дову\\w* г\\w*") |
+                      region == "Ростовская область" & !str_detect(tik, "^(Азов\\w*|Волго\\w*) г\\w*") |
+                      region == "Свердловская область" & str_detect(tik, "^(Верх\\w*|Ивд\\w*|Ниж\\w*|Рев\\w*|Сух\\w*) (г\\w*|п\\w*)") |
+                      region == "Челябинская область" & str_detect(tik, "^(Аш\\w*|Ем\\w*|Ко\\w*|Пл\\w*) г\\w*") |
+                      str_detect(region, "Чечен\\w*") & str_detect(tik, "^Аргун\\w* г\\w*") |
+                      str_detect(region, "Чуваш\\w*") & str_detect(tik, "^Новоче\\w* г\\w*") ~ 
+                      str_remove(tik, " (городская|курортная|поселковая)"),
+                    TRUE ~ tik),
+    tik = str_trim(tik))   # remove leading and trailing spaces
+
+# harmonize the remaining names individually    
+elec_all <- elec_all %>%
+  mutate(    
+    # harmonize regional territorial swaps
+    region = case_when(
+      region == "Город Москва" ~ "город Москва",
+      region == "Московская область" & tik == "Троицкая" ~ "город Москва",
+      region == "Московская область" & tik == "Щербинская" ~ "город Москва",
+      TRUE ~ region),
+    # harmonize territorial commissions (TIKs)
+    tik = case_when(
+      region == "город Москва" & tik == "Щербинская" ~ "Новомосковская",
+      region == "Алтайский край" & tik == "Мамонтовская 39" ~ "Мамонтовская",
+      region == "Амурская область" & tik == "Белогорская городская" ~ "Белогорск",
+      region == "Амурская область" & tik == "Благовещенская городская" ~ "Благовещенск",
+      region == "Амурская область" & tik == "Зейская городская" ~ "Зея",
+      region == "Амурская область" & tik == "Райчихинская городская" ~ "Райчихинск",
+      region == "Амурская область" & tik == "Свободненская городская" ~ "Свободный",
+      region == "Амурская область" & tik == "Тындинская городская" ~ "Тында",
+      region == "Амурская область" & tik == "Углегорская" ~ "Циолковская",
+      region == "Амурская область" & tik == "Шимановская городская" ~ "Шимановск",
+      region == "Архангельская область" & tik == "Новая Земля" ~ "Новоземельская",
+      region == "Архангельская область" & tik == "Приморская-72" ~ "Приморская_72",
+      region == "Архангельская область" & tik == "Приморская-73" ~ "Приморская_73",
+      region == "Архангельская область" & tik == "Знаменская" ~ "Знаменская городская",
+      region == "Брянская область" & tik == "Дятьково и Дятьковская" ~ "Дятьковская",
+      region == "Владимирская область" & tik == "Ленинского р-на г. Владимира" ~ "Владимир, Ленинская",
+      region == "Владимирская область" & tik == "Октябрьского р-на г. Владимира" ~ "Владимир, Октябрьская",
+      region == "Владимирская область" & tik == "Фрунзенского р-на г. Владимира" ~ "Владимир, Фрунзенская",
+      region == "Владимирская область" & tik == "Владимир,Фрунзенская" ~ "Владимир, Фрунзенская",
+      region == "Владимирская область" & tik == "Коврова" ~ "Ковровская городская",
+      region == "Владимирская область" & tik == "Гусь-Хрустального" ~ "Гусь-Хрустальная городская",
+      region == "Владимирская область" & tik == "Коврова" ~ "Ковровская городская",
+      region == "Владимирская область" & tik %in% c("Муромская городская", "округа Муром") ~ "Муром округ",
+      region == "Волгоградская область" & tik == "Серафимовичевская" ~ "Серафимовичская",
+      region == "Волгоградская область" & tik == "Кумылжинская" ~ "Кумылженская",
+      region == "Вологодская область" & tik == "Кичменгско-городецкая" ~ "Кичменгско-Городецкая",
+      region == "город Москва" & tik == "Зеленоград" ~ "Зеленоградская",
+      region == "город Москва" & tik == "Марьина роща" ~ "Марьина Роща",
+      region == "город Москва" & tik == "Кузьмики" ~ "Кузьминки",
+      region == "город Москва" & tik == "Нагатинский Затон" ~ "Нагатинский затон",
+      region == "Забайкальский край" & tik == "Балей" ~ "Балейская городская",
+      region == "Забайкальский край" & tik == "Железнодорожная, Чита" ~ "Чита, Железнодорожная",
+      region == "Забайкальский край" & tik == "Ингодинская, Чита" ~ "Чита, Ингодинская",
+      region == "Забайкальский край" & tik == "Центральная, Чита" ~ "Чита, Центральная",
+      region == "Забайкальский край" & tik == "Чита, Центральный" ~ "Чита, Центральная",
+      region == "Забайкальский край" & tik == "Черновская, Чита" ~ "Чита, Черновская",
+      region == "Забайкальский край" & tik == "Читинская-43" ~ "Читинская 43",
+      region == "Забайкальский край" & tik == "Читинская-44" ~ "Читинская 44",
+      region == "Забайкальский край" & tik == "Читинская-46 поселковая" ~ "Горная",
+      region == "Иркутская область" & tik == "Иркутск, Иркутская городская 1" ~ "Иркутская городская 1",
+      region == "Иркутская область" & tik == "Иркутск, Иркутская городская 2" ~ "Иркутская городская 2",
+      region == "Иркутская область" & tik == "Иркутск, Иркутская городская 3" ~ "Иркутская городская 3",
+      region == "Иркутская область" & tik == "Иркутск, Иркутская городская 4" ~ "Иркутская городская 4",
+      region == "Иркутская область" & tik == "Иркутск, Ленинская" ~ "Иркутская городская 1",
+      region == "Иркутская область" & tik == "Иркутск, Октябрьская" ~ "Иркутская городская 2",
+      region == "Иркутская область" & tik == "Иркутск, Правобережная" ~ "Иркутская городская 3",
+      region == "Иркутская область" & tik == "Иркутск, Свердловская" ~ "Иркутская городская 4",
+      region == "Иркутская область" & tik == "Братская городская 1" ~ "Братская городская",
+      region == "Иркутская область" & tik == "Братская городская 2" ~ "Братская городская",
+      region == "Иркутская область" & tik == "Братская городская 3" ~ "Братская городская",
+      region == "Калининградская область" & tik == "Гурьевская-97" ~ "Гурьевская 97",
+      region == "Калининградская область" & tik == "Гурьевская-98" ~ "Гурьевская 98",
+      region == "Камчатский край" & tik == "Петропавловск-Камчатская городская (судовая)" ~ "Петропавловск-Камчатская (судовая)",
+      region == "Камчатский край" & tik == "Паланская" ~ "Паланская городская",
+      region == "Карачаево-Черкесская Республика" & tik == "Черкесску" ~ "Черкесская",
+      region == "Кемеровская область - Кузбасс" & tik == "Мариинская городская" ~ "Мариинская",
+      region == "Кемеровская область - Кузбасс" & tik == "Топкинская городская" ~ "Топкинская",
+      region == "Кемеровская область - Кузбасс" & tik == "Новокузнецк Заводская" ~ "Новокузнецк, Заводская",
+      region == "Кировская область" & tik == "Вятско-Полянская" ~ "Вятскополянская",
+      region == "Кировская область" & tik == "Вятско-Полянская городская" ~ "Вятскополянская городская",
+      region == "Краснодарский край" & tik == "Западная г.Краснодара" ~ "Краснодар, Западная",
+      region == "Краснодарский край" & tik == "Карасунская г.Краснодара" ~ "Краснодар, Карасунская",
+      region == "Краснодарский край" & tik == "Прикубанская г.Краснодара" ~ "Краснодар, Прикубанская",
+      region == "Краснодарский край" & tik == "Центральная г.Краснодара" ~ "Краснодар, Центральная",
+      region == "Краснодарский край" & tik == "Восточная г.Новороссийска" ~ "Новороссийск, Восточная",
+      region == "Краснодарский край" & tik == "Приморская г.Новороссийска" ~ "Новороссийск, Приморская",
+      region == "Краснодарский край" & tik %in% c("Судов загранплавания", "Новороссийск, судов загранплавания") ~ "Новороссийск, Судовая",
+      region == "Краснодарский край" & tik == "Центральная г.Новороссийска" ~ "Новороссийск, Центральная",
+      region == "Краснодарский край" & tik == "Адлерская г.Сочи" ~ "Сочи, Адлерская",
+      region == "Краснодарский край" & tik == "Лазаревская г.Сочи" ~ "Сочи, Лазаревская",
+      region == "Краснодарский край" & tik == "Хостинская г.Сочи" ~ "Сочи, Хостинская",
+      region == "Краснодарский край" & tik == "Центральная г.Сочи" ~ "Сочи, Центральная",
+      region == "Краснодарский край" & tik == "Южная г.Новороссийска" ~ "Новороссийск, Южная",
+      region == "Краснодарский край" & tik == "ФТ \"Сириус\"" ~ "ФТ Сириус",
+      region == "Красноярский край" & tik == "Игаркинская городская" ~ "Игарская городская",
+      region == "Красноярский край" & tik == "Усть-Енисейская" ~ "Караульская",
+      region == "Красноярский край" & tik == "Хатангская" ~ "Таймырская Долгано-Ненецкая 2",
+      region == "Курганская область" & tik == "Курганская Восточная" ~ "Курган, Восточная",
+      region == "Курганская область" & tik == "Курганская Западная" ~ "Курган, Западная",
+      region == "Курская область" & tik == "Центрального округа г. Курска" ~ "Курск, Центральная",
+      region == "Курская область" & tik == "Железнодорожного округа г. Курска" ~ "Курск, Железнодорожная",
+      region == "Курская область" & tik == "Сеймского округа г. Курска" ~ "Курск, Сеймская",
+      region == "Курская область" & tik == "Железногорска" ~ "Железногорская городская",
+      region == "Курская область" & tik == "Щигры" ~ "Щигровская городская",
+      region == "Курская область" & tik == "Курчатова" ~ "Курчатовская городская",
+      region == "Курская область" & tik == "Льгова" ~ "Льговская городская",
+      region == "Ленинградская область" & tik == "Коммунарская городская" ~ "Коммунаровская городская",
+      region == "Липецкая область" & tik == "Липецкая-115" ~ "Липецкая 115 ок",
+      region == "Московская область" & tik == "Лобнеская" ~ "Лобненская",
+      region == "Московская область" & tik == "Солнечногорская 1" ~ "Солнечногорская (118 округ)",
+      region == "Мурманская область" & tik == "Александровская" ~ "Александровск",
+      region == "Ненецкий автономный округ" & tik == "Искательская" ~ "Заполярная",
+      region == "Нижегородская область" & tik %in% c("Арзамас округ", "Арзамасская городская") ~ "Арзамасская, Первая",
+      region == "Нижегородская область" & tik == "Арзамасская" ~ "Арзамасская, Вторая",
+      region == "Нижегородская область" & tik == "Нижний Новгород, Автозаводская северная" ~ "Нижний Новгород, Автозаводская Северная",
+      region == "Нижегородская область" & tik == "Первомайск округ" ~ "Первомайская",
+      region == "Нижегородская область" & tik == "Саров округ" ~ "Саровская",
+      region == "Нижегородская область" & tik == "Чкаловск округ" ~ "Чкаловская",
+      region == "Нижегородская область" & tik == "Шахунья округ" ~ "Шахунская",
+      region == "Нижегородская область" & tik == "Выкса округ" ~ "Выксунская",
+      region == "Нижегородская область" & tik == "Бор округ" ~ "Борская",
+      region == "Нижегородская область" & tik == "Дзержинск, Калининская" ~ "Дзержинская, Калининская",
+      region == "Нижегородская область" & tik == "Дзержинск, Свердловская" ~ "Дзержинская, Свердловская",
+      region == "Нижегородская область" & tik == "Кулебаки округ" ~ "Кулебакская",
+      region == "Нижегородская область" & tik == "Нижний Новгород, Автозаводская южная" ~ "Нижний Новгород, Автозаводская Южная",
+      region == "Новгородская область" & tik == "Великий Новгород" ~ "Новгородская городская",
+      region == "Новосибирская область" & tik == "Кольцовская" ~ "Кольцово",
+      region == "Омская область" & tik == "Кировскому округу г. Омска Омской области" ~ "Омск, Кировская",
+      region == "Омская область" & tik == "Ленинскому округу г. Омска Омской области" ~ "Омск, Ленинская",
+      region == "Омская область" & tik == "Азовскому немецкому национальная" ~ "Азовская",
+      region == "Омская область" & tik == "Руско-Полянская" ~ "Русско-Полянская",
+      region == "Омская область" & tik == "Щербакульская" ~ "Шербакульская",
+      region == "Оренбургская область" & tik == "Орска, Советская" ~ "Орск, Советская",
+      region == "Пензенская область" & tik == "Сердобска городская" ~ "Сердобская городская",
+      region == "Пензенская область" & tik == "Беднодемьяновская" ~ "Спасская",
+      region == "Пермский край" & tik == "Березники" ~ "Березниковская",
+      region == "Пермский край" & tik == "Дзержинского района г.Перми" ~ "Пермь, Дзержинская",
+      region == "Пермский край" & tik == "Индустриального района г.Перми" ~ "Пермь, Индустриальная",
+      region == "Пермский край" & tik == "Кировского района г.Перми" ~ "Пермь, Кировская",
+      region == "Пермский край" & tik == "Кудымкара" ~ "Кудымкарская городская",
+      region == "Пермский край" & tik == "Кунгура" ~ "Кунгурская городская",
+      region == "Пермский край" & tik == "Ленинского района г.Перми" ~ "Пермь, Ленинская",
+      region == "Пермский край" & tik == "Мотовилихинского района г.Перми" ~ "Пермь, Мотовилихинская",
+      region == "Пермский край" & tik == "Орджоникидзевского района г.Перми" ~ "Пермь, Орджоникидзевская",
+      region == "Пермский край" & tik == "Свердловского района г.Перми" ~ "Пермь, Свердловская",
+      region == "Пермский край" & tik == "Соликамска" ~ "Соликамская городская",
+      region == "Пермский край" & tik == "Кудымкарская муниципальная" ~ "Кудымкарская",
+      region == "Приморский край" & tik == "Большой Камень" ~ "Большекаменская",
+      region == "Приморский край" & tik == "Ленинского района города Владивостока" ~ "Владивосток, Ленинская",
+      region == "Приморский край" & tik == "Фокино" ~ "Фокинская",
+      region == "Приморский край" & tik == "Уссурийск и Уссурийская" ~ "Уссурийская",
+      region == "Псковская область" & tik == "Стругокрасненская" ~ "Струго-Красненская",
+      region == "Республика Алтай" & tik == "Турочкаская" ~ "Турочакская",
+      region == "Республика Башкортостан" & tik == "Уфимская-3" ~ "Уфимская (3)",
+      region == "Республика Башкортостан" & tik == "Уфимская-4" ~ "Уфимская (4)",
+      region == "Республика Башкортостан" & tik == "Уфимская-5" ~ "Уфимская (5)",
+      region == "Республика Дагестан" & tik == "Южносухокумская городская" ~ "Южно-Сухокумская городская",
+      region == "Республика Ингушетия" & tik == "Сунжа" ~ "Сунженская городская",
+      region == "Республика Карелия" & tik == "Петрозаводская 3" ~ "Петрозаводская 3 (судовая)",
+      region == "Республика Коми" & tik == "Усть Цилемская" ~ "Усть-Цилемская",
+      region == "Республика Коми" & tik == "Эжвинская" ~ "Сыктывкар, Эжвинская",
+      region == "Республика Мордовия" & tik == "Саранск, Ленинская" ~ "Ленинская",
+      region == "Республика Мордовия" & tik == "Саранск, Октябрьская" ~ "Октябрьская",
+      region == "Республика Мордовия" & tik == "Саранск, Пролетарская" ~ "Пролетарская",
+      region == "Республика Саха (Якутия)" & tik == "Мирниный" ~ "Мирнинская",
+      region == "Республика Саха (Якутия)" & tik == "Нерюнгри" ~ "Нерюнгринская",
+      region == "Республика Саха (Якутия)" & tik == "Эвено-Бытантайская 34" ~ "Эвено-Бытантайская",
+      region == "Республика Саха (Якутия)" & tik == "Якутск" ~ "Якутская городская",
+      region == "Республика Северная Осетия - Алания" & tik == "Владикавказ, Левобережная" ~ "Левобережной части г.Владикавказа",
+      region == "Республика Северная Осетия - Алания" & tik %in% c("Владикавказ, Правобережная", "Правобережной части г. Владикавказа") ~ "Правобережной части г.Владикавказа",
+      region == "Республика Северная Осетия - Алания" & tik == "Правобережая" ~ "Правобережная",
+      region == "Республика Тыва" & tik == "Бай-Тайгинский" ~ "Бай-Тайгинская",
+      region == "Республика Тыва" & tik == "Пии-Хемская" ~ "Пий-Хемская",
+      region == "Республика Хакасия" & tik == "Абакана" ~ "Абаканская",
+      region == "Республика Хакасия" & tik == "Саяногорска" ~ "Саяногорская",
+      region == "Республика Хакасия" & tik == "Черногорска" ~ "Черногорская",
+      region == "Ростовская область" & tik == "Сальска и Сальская" ~ "Сальская",
+      region == "Ростовская область" & tik == "Таганрога" ~ "Таганрогская",
+      region == "Ростовская область" & tik == "Ростова-на-Дону, Октябрьская" ~ "Ростов-на-Дону, Октябрьская",
+      region == "Рязанская область" & tik == "Рязань,Железнодорожная" ~ "Рязань, Железнодорожная",
+      region == "Рязанская область" & tik == "Новодеревенская" ~ "Александро-Невская",
+      region == "Саратовская область" & tik == "Базарнокарабулакская" ~ "Базарно-Карабулакская",
+      region == "Свердловская область" & tik == "Верхне-Дубровская поселковая" ~ "Верхнедубровская",
+      region == "Свердловская область" & tik == "Верхне-Тагильская городская" ~ "Верхнетагильская",
+      region == "Тамбовская область" & tik == "Староюревская" ~ "Староюрьевская",
+      region == "Томская область" & tik == "Северск" ~ "Северская городская",
+      region == "Томская область" & tik == "Стрежевой" ~ "Стрежевская городская",
+      region == "Томская область" & tik == "Кировский округ г. Томска" ~ "Томск, Кировская",
+      region == "Томская область" & tik == "Ленинский округ г. Томска" ~ "Томск, Ленинская",
+      region == "Томская область" & tik == "Октябрьский округ г. Томска" ~ "Томск, Октябрьская",
+      region == "Томская область" & tik == "Советский округ г. Томска" ~ "Томск, Советская",
+      region == "Томская область" & tik == 'Муниципальное образование "Пудинское"' ~ "Кедровская городская",
+      region == "Удмуртская Республика" & tik == "Завьяловская-33" ~ "Завьяловская 33",
+      region == "Удмуртская Республика" & tik == "Завьяловская-34" ~ "Завьяловская 34",
+      region == "Хабаровский край" & tik == "Комсомольская-на-Амуре городская" ~ "Комсомольская городская",
+      region == "Хабаровский край" & tik == "Николаевская-на-Амуре" ~ "Николаевская",
+      region == "Ханты-Мансийский автономный округ - Югра" & tik == "Няганская городская" ~ "Няганьская городская",
+      region == "Ханты-Мансийский автономный округ - Югра" & tik == "Сургутская-222" ~ "Сургутская в части 222",
+      region == "Ханты-Мансийский автономный округ - Югра" & tik == "Сургутская-223" ~ "Сургутская в части 223",
+      region == "Челябинская область" & tik == "Ленинский район города Магнитогорска" ~ "Магнитогорск, Ленинская",
+      region == "Чеченская Республика" & tik == "Грозный, Заводская" ~ "Грозный, Шейх-Мансуровская",
+      region == "Чеченская Республика" & tik == "Грозный, Ленинская" ~ "Грозный, Ахматовская",
+      region == "Чеченская Республика" & tik == "Грозный, Октябрьская" ~ "Грозный, Байсангуровская",
+      region == "Чеченская Республика" & tik == "Грозный, Старопромысловская" ~ "Грозный, Висаитовская",
+      region == "Чеченская Республика" & tik == "Сунженская" ~ "Серноводская",
+      region == "Чувашская Республика - Чувашия" & tik == "Мариинско-Посадская" ~ "Марпосадская",
+      region == "Чукотский автономный округ" & tik == "Иультинская" ~ "Эгвекинотская",
+      region == "Чукотский автономный округ" & tik == "Чаунская" ~ "Певекская",           
+      region == "Ярославская область" & tik == "Дзержинская" ~ "Ярославль, Дзержинская",
+      region == "Ярославская область" & tik == "Заволжская" ~ "Ярославль, Заволжская",
+      region == "Ярославская область" & tik == "Кировская" ~ "Ярославль, Кировская",
+      region == "Ярославская область" & tik == "Красноперекопская" ~ "Ярославль, Красноперекопская",
+      region == "Ярославская область" & tik == "Ленинская" ~ "Ярославль, Ленинская",
+      region == "Ярославская область" & tik == "Фрунзенская" ~ "Ярославль, Фрунзенская",
+      region == "Ярославская область" & tik %in% c("Волжская", "Центральная", "Рыбинск, Центральная") ~ "Рыбинск, Волжская",
+      region == "Ярославская область" & tik == "Пролетарская" ~ "Рыбинск, Пролетарская",
+      TRUE ~ tik
+    ),
+    # merge the territorial commissions (TIKs) that merged or split over 2000-2024
+    tik = case_when(
+      region == "Алтайский край" & tik %in% c("Барнаул, Первая Индустриальная", "Барнаул, Вторая Индустриальная") ~ "Барнаул, Индустриальная",
+      region == "Алтайский край" & tik == "Змеиногорская городская" ~ "Змеиногорская",
+      region == "Алтайский край" & tik == "Каменская городская" ~ "Каменская",
+      region == "Алтайский край" & tik == "Славгородская" ~ "Славгородская городская",
+      region == "Амурская область" & tik == "Прогресс" ~ "Райчихинск",
+      region == "Архангельская область" & tik %in% c("Приморская_72", "Приморская_73") ~ "Приморская",
+      region == "Архангельская область" & tik %in% c("Северодвинская 1", "Северодвинская 2") ~ "Северодвинская", # 2016+
+      region == "Архангельская область" & tik == "Соловецкая" ~ "Приморская",
+      region == "Брянская область" & tik %in% c("Брянская-77", "Брянская-78") ~ "Брянская", # 2016 & 2021
+      region == "Брянская область" & tik == "Новозыбковская" ~ "Новозыбковская городская",
+      region == "Владимирская область" & tik == "Александровская городская" ~ "Александровская",
+      region == "Владимирская область" & tik == "Вязниковская городская" ~ "Вязниковская",
+      region == "Владимирская область" & tik == "Собинская городская" ~ "Собинская",
+      region == "Владимирская область" & tik == "Суздальская городская" ~ "Суздальская",
+      region == "Волгоградская область" & tik %in% c("Городищенская-81", "Городищенская-83", "Городищенская (часть 1)") ~ "Городищенская", #2016 & 2021
+      region == "город Москва" & tik %in% c("Крюково", "Матушкино", "Савелки", "Силино", "Старое Крюково") ~ "Зеленоградская",             #2011+
+      region == "город Москва" & tik == "Сосенская" ~ "Новомосковская",
+      region == "город Санкт-Петербург" & tik == "31" ~ "1",
+      region == "город Санкт-Петербург" & tik %in% c("32", "33") ~ "2",
+      region == "город Санкт-Петербург" & tik == "34" ~ "10",
+      region == "город Санкт-Петербург" & tik == "35" ~ "14",
+      region == "город Санкт-Петербург" & tik == "36" ~ "22",
+      region == "город Санкт-Петербург" & tik %in% c("38", "40") ~ "11",
+      region == "город Санкт-Петербург" & tik %in% c("37", "39") ~ "17",
+      region == "город Санкт-Петербург" & tik == "41" ~ "3",
+      region == "город Санкт-Петербург" & tik == "42" ~ "7",
+      region == "город Санкт-Петербург" & tik == "43" ~ "21",
+      region == "город Санкт-Петербург" & tik == "44" ~ "4",
+      region == "город Санкт-Петербург" & tik == "45" ~ "25",
+      region == "город Санкт-Петербург" & tik == "47" ~ "6",
+      region == "город Санкт-Петербург" & tik == "48" ~ "19",
+      region == "город Санкт-Петербург" & tik %in% c("49", "50", "51", "52") ~ "5",
+      region == "город Санкт-Петербург" & tik == "53" ~ "24",
+      region == "город Санкт-Петербург" & tik == "54" ~ "18",
+      region == "город Санкт-Петербург" & tik == "55" ~ "8",
+      region == "город Санкт-Петербург" & tik == "56" ~ "28",
+      region == "город Санкт-Петербург" & tik == "58" ~ "9",
+      region == "город Санкт-Петербург" & tik == "59" ~ "20",
+      region == "город Санкт-Петербург" & tik %in% c("60", "61") ~ "23",
+      region == "город Санкт-Петербург" & tik %in% c("62", "63") ~ "29",
+      region == "Забайкальский край" & tik == "Агинская городская" ~ "Агинская",
+      region == "Забайкальский край" & tik == "Балейская городская" ~ "Балейская",
+      region == "Забайкальский край" & tik %in% c("Читинская 43", "Читинская 44") ~ "Читинская",                                 # 2016 & 2021
+      region == "Ивановская область" & tik %in% c("Ивановская-91", "Ивановская-92") ~ "Ивановская",                              # 2016 & 2021
+      region == "Иркутская область" & tik %in% c("Братская городская 1", "Братская городская 2", "Братская городская 3") ~ "Братская городская",
+      region == "Иркутская область" & tik %in% c("Иркутская-93", "Иркутская-94", "Иркутская-95") ~ "Иркутская",                  # 2016 & 2021
+      region == "Иркутская область" & tik == "Нижнеудинская городская" ~ "Нижнеудинская",
+      region == "Иркутская область" & tik == "Тайшетская городская" ~ "Тайшетская",
+      region == "Калининградская область" & tik %in% c("Гурьевская городская", "Гурьевская 97", "Гурьевская 98") ~ "Гурьевская", # 2016 & 2021
+      region == "Калининградская область" & tik == "Калининград, Балтийская" ~ "Калининград, Московская",
+      region == "Калининградская область" & tik == "Калининград, Октябрьская" ~ "Калининград, Центральная",
+      region == "Калининградская область" & tik %in% c("Ладушкинская", "Мамоновская") ~ "Багратионовская",
+      region == "Калининградская область" & tik == "Янтарнинская" ~ "Светлогорская",
+      region == "Камчатский край" & tik == "Вулканная поселковая" ~ "Елизовская",
+      region == "Камчатский край" & tik == "Паланская городская" ~ "Тигильская",
+      region == "Карачаево-Черкесская Республика" & tik == "Карачаевскому городскому округу" ~ "Карачаевская",
+      region == "Карачаево-Черкесская Республика" & tik == "Ногайская" ~ "Адыге-Хабльская",
+      region == "Кемеровская область - Кузбасс" & tik == "Гурьевская городская" ~ "Гурьевская",
+      region == "Кемеровская область - Кузбасс" & tik == "Краснобродская городская" ~ "Киселевская городская",
+      region == "Кировская область" & tik %in% c("Киров, Ленинская 1", "Киров, Ленинская 2") ~ "Киров, Ленинская",                    # 2021+
+      region == "Кировская область" & tik %in% c("Киров, Октябрьская 1", "Киров, Октябрьская 2") ~ "Киров, Октябрьская",              # 2021+
+      region == "Костромская область" & tik %in% c("Костромская городская 1", "Костромская городская 2") ~ "Костромская городская",   # 2018+
+      region == "Костромская область" & tik == "Мантуровская городская" ~ "Мантуровская",
+      region == "Краснодарский край" &  tik == "Краснодар, Калининская" ~ "Краснодар, Прикубанская",
+      region == "Краснодарский край" &  tik == "Краснодар, Пашковская" ~ "Краснодар, Карасунская",
+      region == "Краснодарский край" &  tik == "Краснодар, Пригородная" ~ "Краснодар, Карасунская",
+      region == "Краснодарский край" &  tik == "Краснодар, Первомайская" ~ "Краснодар, Прикубанская",
+      region == "Краснодарский край" &  tik == "Новороссийск, Южная" ~ "Новороссийск, Центральная",
+      region == "Краснодарский край" &  tik == "Новороссийск, Пригородная" ~ "Новороссийск, Приморская",
+      region == "Краснодарский край" &  tik == "Сочи, Приморская" ~ "Сочи, Центральная",
+      region == "Краснодарский край" &  tik == "ФТ Сириус" ~ "Сочи, Адлерская",
+      region == "Красноярский край" &  tik == "Березовская-Центральный" ~ "Березовская",
+      region == "Красноярский край" & tik %in% c("Диксонская", "Дудинская", "Караульская") ~ "Таймырская Долгано-Ненецкая 1",
+      region == "Красноярский край" &  tik == "Емельяновская-Дивногорский" ~ "Емельяновская",
+      region == "Красноярский край" & tik == "Заозерная городская" ~ "Рыбинская",
+      region == "Красноярский край" & tik == "Игарская городская" ~ "Туруханская",
+      region == "Красноярский край" & tik %in% c("Красноярск, Советская 1", "Красноярск, Советская 2") ~ "Красноярск, Советская", # 2024
+      region == "Курская область" & tik %in% c("Курск, Центральная 1", "Курск, Центральная 2") ~ "Курск, Центральная",            # 2021+
+      region == "Курская область" & tik %in% c("Курская-109", "Курская-110") ~ "Курская",
+      region == "Ленинградская область" & tik %in% c("Гатчинская 112", "Гатчинская 113", "Гатчинская восточная", "Гатчинская западная", "Гатчинская городская") ~ "Гатчинская", # 2003+ / 2016 & 2021
+      region == "Ленинградская область" &  tik  %in% c("Волховская городская", "Новоладожская городская") ~ "Волховская",
+      region == "Ленинградская область" &  tik == "Ивангородская городская" ~ "Кингисеппская",
+      region == "Ленинградская область" &  tik == "Колтушская" ~ "Всеволожская",
+      region == "Ленинградская область" &  tik == "Кузнечненская" ~ "Приозерская",
+      region == "Ленинградская область" &  tik == "Коммунаровская городская" ~ "Гатчинская",
+      region == "Ленинградская область" &  tik == "Железнодорожная городская" ~ "Балашихинская",
+      region == "Ленинградская область" &  tik == "Пикалевская городская" ~ "Бокситогорская",           
+      region == "Ленинградская область" &  tik == "Светогорская городская" ~ "Выборгская",
+      region == "Ленинградская область" &  tik == "Сертоловская городская" ~ "Всеволожская",
+      region == "Ленинградская область" &  tik == "Шлиссельбургская городская" ~ "Кировская",
+      region == "Липецкая область" & tik %in% c("Липецк, Октябрьская 1", "Липецк, Октябрьская 2") ~ "Липецк, Октябрьская",        # 2016+
+      region == "Липецкая область" & tik %in% c("Липецкая 114 ок", "Липецкая 115 ок") ~ "Липецкая",                               # 2016+
+      region == "Московская область" & str_detect(tik, " 2$") ~ str_remove(tik, " 2$"),
+      region == "Московская область" &  tik %in% c("Власихинская", "Звенигородская") ~ "Одинцовская",
+      region == "Московская область" &  tik == "Железнодорожная" ~ "Балашихинская",
+      region == "Московская область" &  tik == "Климовская" ~ "Подольская",
+      region == "Московская область" &  tik == "Приокская" ~ "Ступинская",
+      region == "Московская область" &  tik == "Звездный городок" ~ "Щелковская",
+      region == "Московская область" &  tik %in% c("Ивантеевская", "Красноармейская", "Пушкинская (округ 127)") ~ "Пушкинская",
+      region == "Московская область" &  tik == "Ногинская" ~ "Богородская",
+      region == "Московская область" &  tik == "Озерская" ~ "Коломенская",
+      region == "Московская область" &  tik == "Рошальская" ~ "Шатурская",
+      region == "Московская область" &  tik %in% c("Серпуховская", "Протвинская", "Пущинская") ~ "Серпуховская городская",
+      region == "Московская область" &  tik == "Солнечногорская (118 округ)" ~ "Химкинская",
+      region == "Московская область" &  tik == "Электрогорская" ~ "Павлово-Посадская",
+      region == "Московская область" &  tik == "Электростальская (округ 127)" ~ "Электростальская",
+      region == "Московская область" &  tik == "Юбилейная" ~ "Королевская",
+      region == "Мурманская область" & tik %in% c("Полярнинская", "Скалистинская", "Снежногорская") ~ "Александровск",
+      region == "Нижегородская область" & str_detect(tik, "^Дзержинская") ~ "Дзержинская городская",                                             # 2003+
+      region == "Нижегородская область" & str_detect(tik, "^Нижний Новгород, Автозаводская") ~ "Нижний Новгород, Автозаводская",                 # 2003+
+      region == "Новосибирская область" &  str_detect(tik, "-1(35|36|37|38)$") ~ str_remove(tik, "-1(35|36|37|38)$"),                            # 2016+
+      region == "Новосибирская область" &  tik == "Барабинская городская" ~ "Барабинская",
+      region == "Новосибирская область" &  tik == "Кольцово" ~ "Новосибирск, Дзержинская",
+      region == "Новосибирская область" &  tik == "Куйбышевская городская" ~ "Барабинская",
+      region == "Новосибирская область" &  tik == "Татарская городская" ~ "Татарская",
+      region == "Оренбургская область" & tik == "Гайская" ~ "Гайская городская",
+      region == "Оренбургская область" & tik == "Комаровская" ~ "Ясненская",
+      region == "Оренбургская область" & tik == "Соль-Илецкая" ~ "Соль-Илецкая городская",
+      region == "Оренбургская область" & tik == "Сорочинская" ~ "Сорочинская городская",
+      region == "Пензенская область" & tik == "Каменская городская" ~ "Каменская",
+      region == "Пензенская область" & tik == "Кондольская" ~ "Пензенская",
+      region == "Пензенская область" & tik == "Сердобская городская" ~ "Сердобская",
+      region == "Пермский край" & tik == "Гремячинская" ~ "Губахинская",
+      region == "Пермский край" & tik == "Кудымкарская городская" ~ "Кудымкарская",
+      region == "Пермский край" & tik %in% c("Кунгурская 1", "Кунгурская 2", "Кунгурская городская") ~ "Кунгурская",                              # 2021+
+      region == "Пермский край" & tik %in% c("Пермская-58", "Пермская-59", "Пермская-60") ~ "Пермская",                                    # 2016 & 2021
+      region == "Пермский край" & tik %in% c("Пермь, Свердловская 1", "Пермь, Свердловская 2") ~ "Пермь, Свердловская",                           # 2018+
+      region == "Пермский край" & tik == "Соликамская городская" ~ "Соликамская",
+      region == "Пермский край" & tik == "Усольская" ~ "Березниковская",
+      region == "Приморский край" & tik %in% c("Владивосток, Ленинская-1", "Владивосток, Ленинская-2") ~ "Владивосток, Ленинская",                # 2024
+      region == "Приморский край" & tik %in% c("Владивосток, Первореченская-1", "Владивосток, Первореченская-2") ~ "Владивосток, Первореченская", # 2024
+      region == "Приморский край" & tik == "Владивосток, Морская" ~ "Владивосток, Фрунзенская",
+      region == "Республика Башкортостан" & str_detect(tik, "^Уфимская") ~ "Уфимская",                                     # 2003+
+      region == "Республика Ингушетия" &tik == "Сунженская городская" ~ "Сунженская",
+      region == "Республика Карелия" &tik == "Вепсская" ~ "Прионежская",
+      region == "Республика Марий Эл" & str_detect(tik, "^Йошкар-Олинская") ~ "Йошкар-Олинская городская",                 # 2007+
+      region == "Республика Мордовия" &tik == "Ковылкинская городская" ~ "Ковылкинская",
+      region == "Республика Мордовия" &tik == "Рузаевская городская" ~ "Рузаевская",
+      region == "Республика Татарстан (Татарстан)" & str_detect(tik, "^Набережные") ~ "Набережно-Челнинская городская",    # 2007+
+      region == "Ростовская область" & tik %in% c("Аксайская-149", "Аксайская-152") ~ "Аксайская",                         # 2016 & 2021
+      region == "Ростовская область" & tik %in% c("Мясниковская-150", "Мясниковская-151") ~ "Мясниковская",                # 2016 & 2021
+      region == "Ростовская область" & tik %in% c("Таганрогская (восточная)", "Таганрогская (западная)") ~ "Таганрогская", # 2021+
+      region == "Рязанская область" & tik %in% c("Рязанская-156", "Рязанская-157") ~ "Рязанская",                          # 2016 & 2021
+      region == "Самарская область" & str_detect(tik, "^Волжская") ~ "Волжская",                                           # 2016 & 2021
+      region == "Самарская область" & str_detect(tik, "^Ставропольская") ~ "Ставропольская",                               # 2016 & 2021
+      region == "Саратовская область" & tik == "Михайловская" ~ "Краснопартизанская", 
+      region == "Саратовская область" & tik == "Саратовская" ~ "Саратов, Гагаринская", # 2021+ 
+      region == "Свердловская область" & tik %in% c("Пермская-58", "Пермская-59", "Пермская-60") ~ "Пермская",
+      region == "Свердловская область" & str_detect(tik, "^Нижний Тагил") ~ "Нижнетагильская",      # 2003+
+      region == "Саратовская область" & str_detect(tik, "^Саратовская") ~ "Саратов, Гагаринская",     # 2016 & 2021
+      region == "Смоленская область" & str_detect(tik, "^Смоленская") ~ "Смоленская",        # 2016 & 2021
+      region == "Ставропольский край" & tik == "Буденновская городская" ~ "Буденновская",
+      region == "Ставропольский край" & tik == "Промышленная 2" ~ "Ставрополь, Промышленная",
+      region == "Тамбовская область" & str_detect(tik, "^Тамбовская") ~ "Тамбовская",        # 2016 & 2021
+      region == "Тверская область" & tik == "Вышневолоцкая городская" ~ "Вышневолоцкая",
+      region == "Тверская область" & str_detect(tik, "^Калининская") ~ "Калининская",        # 2016 & 2021
+      region == "Томская область" & str_detect(tik, "^Томская") ~ "Томская",                 # 2016 & 2021
+      region == "Тульская область" & str_detect(tik, "^Ленинская") ~ "Ленинская",            # 2016 & 2021
+      region == "Тюменская область" & tik == "Тюмень, Восточная" ~ "Тюмень, Ленинская",
+      region == "Удмуртская Республика" & str_detect(tik, "^Завьяловская") ~ "Завьяловская", # 2016 & 2021
+      region == "Ульяновская область" &tik == "Барышская городская" ~ "Барышская",
+      region == "Хабаровский край" & str_detect(tik, "^Хабаровская") ~ "Хабаровская",        # 2016 & 2021
+      region == "Ханты-Мансийский автономный округ - Югра" & tik %in% c("Сургутская в части 222", "Сургутская в части 223") ~ "Сургутская", # 2016 & 2021
+      region == "Чувашская Республика - Чувашия" & str_detect(tik, "^Чебоксарская") ~ "Чебоксарская", # 2016 & 2021
+      region == "Чукотский автономный округ" & tik == "Беринговская" ~ "Анадырская",
+      region == "Чукотский автономный округ" & tik == "Шмидтовская" ~ "Эгвекинотская",
+      region == "Ярославская область" & str_detect(tik, "^Рыбинская") ~ "Рыбинская",         # 2016 & 2021
+      region == "Ярославская область" & str_detect(tik, "^Ярославская") ~ "Ярославская",     # 2016 & 2021
+      TRUE ~ tik))   
+
+# 2026: map the remaining 2026 TIK names onto the RED (2024) TIK names. The crosswalk is built by
+# scripts/01c_propose_tik_recode_2026.R from shared UIK numbers (2024 ~ 2026); ONLY rows with accept == TRUE are applied.
+# First run: the file does not exist yet -> skipped; run 01c, review the file, then rerun this script.
+if (file.exists("data/crosswalks/tik_recode_2026.csv")) {
+  tik_recode_2026 <- read_csv("data/crosswalks/tik_recode_2026.csv", show_col_types = FALSE) %>%
+    filter(accept %in% TRUE) %>%
+    transmute(year = 2026, region, tik = tik_2026, tik_red = tik_red)
+  elec_all <- elec_all %>%
+    left_join(tik_recode_2026, by = c("year", "region", "tik")) %>%
+    mutate(tik = coalesce(tik_red, tik)) %>%
+    select(-tik_red)
+  rm(tik_recode_2026)
+} else message("01: data/crosswalks/tik_recode_2026.csv not found - 2026 TIK names left as normalised")
+
+# Harmonize TIK splits
+# 2003 split of Петрозаводская into Петрозаводская 1 and Петрозаводская 2
+petrozavodsk_1_2003 <- elec_all %>%
+  filter(year == 2003, tik == "Петрозаводская 1") %>%
+  distinct(uik)
+
+# 2004 spin-off of Пелымская поселковая back from Ивдельская (was already separate in 2000)
+pelym_2004 <- elec_all %>%
+  filter(year == 2004, tik == "Пелымская поселковая") %>%
+  distinct(uik)
+
+# 2004 spin-off of Уральская поселковая back from Белоярская (was already separate in 2000)
+uralsky_2004 <- elec_all %>%
+  filter(year == 2004, tik == "Уральская поселковая") %>%
+  distinct(uik)
+
+# 2020+ St Pete TIK 46, 57, 64 spin-offs from multiple commissions
+petersburg_2018 <- elec_all %>%
+  filter(year == 2018, tik %in% c(6, 26, 9, 12, 28, 16, 30)) %>%
+  distinct(region, tik_2018 = tik, uik)
+
+# 2024 Akademichesky spin-off from Leninsky and Verkh-Isetsky
+yekaterinburg_2021 <- elec_all %>%
+  filter(year == 2021, str_detect(tik, "^Екатеринбург")) %>%
+  distinct(region, tik_2021 = tik, uik)
+
+# retrospective splits
+elec_all <- elec_all %>%
+  mutate(
+    tik = case_when(
+      # Петрозаводская split in 2000
+      year == 2000 & tik == "Петрозаводская" & uik %in% petrozavodsk_1_2003$uik ~ "Петрозаводская 1",
+      year == 2000 & tik == "Петрозаводская" ~ "Петрозаводская 2",
+      # Пелымская spin-off from Ивдельская for 2003
+      year == 2003 & tik == "Ивдельская" & uik %in% pelym_2004$uik ~ "Пелымская поселковая",
+      # Уральская spin-off from Ивдельская for 2003
+      year == 2003 & tik == "Белоярская" & uik %in% uralsky_2004$uik ~ "Уральская поселковая",
+      TRUE ~ tik)) %>%
+  left_join(petersburg_2018, by = c("region", "uik")) %>%    # 2020+ St Pete TIK 46, 57, 64 spin-offs from multiple commissions
+  left_join(yekaterinburg_2021, by = c("region", "uik")) %>% # 2024 Akademichesky spin-off back to Leninsky and Verkh-Isetsky         
+  mutate(tik = case_when(
+    tik %in% c(46, 57, 64) & year == 2026 ~ coalesce(tik_2018, tik),                               # 2026
+    tik %in% c(46, 57, 64) & year %in% c(2021, 2024) ~ tik_2018, 
+    tik == "Екатеринбург, Академическая" & year == 2026 ~ coalesce(tik_2021, tik),               # 2026 (UIKs without a 2021 twin stay flagged)
+    tik == "Екатеринбург, Академическая" & year == 2024 ~ tik_2021, 
+    region == "Свердловская область" & year == 2024 & uik %in% c(2667, 2770) ~ "Екатерибург, Ленинская",                        # based on UIK address checks
+    region == "Свердловская область" & year == 2024 & uik %in% c(2655, 2656, 2769, 2771, 2772) ~ "Екатерибург, Верх-Исетская",  # based on UIK address checks
+    TRUE ~ tik))
+  
+
+
+# Harmonize SMDs
+# Reference mapping from 2016 (there was no redistricting in 2021)
+tik_to_oik_2016_unique <- elec_all %>%
+  filter(year == 2016) %>%
+  select(region, tik, oik = oik_old, oik_name = oik_name_old) %>%
+  group_by(region, tik) %>%
+  filter(n_distinct(oik) == 1) %>%   # Keep only TIKs that map to ONE OIK
+  ungroup() %>%
+  distinct(region, tik, oik, oik_name)
+
+
+# Assign 2021 oik info to 2003 and 2016 rows
+elec_all <- elec_all %>%
+  left_join(tik_to_oik_2016_unique, by = c("region", "tik")) %>%
+  # For rows in 2021 with missing oik_name, look up the 2016 name by oik_old
+  left_join(elec_all %>%  filter(year == 2016) %>%
+              select(oik_old, oik_name_2016 = oik_name_old) %>%
+              distinct(),
+            by = "oik_old") %>%
+mutate(
+  oik = ifelse(year %in% c(2016, 2021), oik_old, oik),
+  oik_name = ifelse(year == 2016, oik_name_old, oik_name),
+  oik_name = ifelse(year == 2021 & is.na(oik_name), coalesce(oik_name, oik_name_2016), oik_name)
+  # Replace old columns with NA except for 2003
+  # oik_old = ifelse(year != 2003, oik_old, NA),
+  # oik_name_old = ifelse(year != 2003, oik_name_old, NA)
+) %>%
+  select(-oik_name_2016)
+
+# 2026: single-member districts are out of scope -> never inherit 2016/2021 harmonised districts via the TIK join
+elec_all <- elec_all %>% mutate(oik = ifelse(year == 2026, NA, oik), oik_name = ifelse(year == 2026, NA, oik_name))
+
+rm(pelym_2004, petersburg_2018, petrozavodsk_1_2003, uralsky_2004, yekaterinburg_2021, tik_to_oik_2016_unique)
+
+# check the panel balance by year
+
+# Region-year balance
+balance_regions <- elec_all %>%
+  distinct(region, year) %>%
+  mutate(present = "✓") %>%
+  pivot_wider(names_from = year, values_from = present, values_fill = "") %>%
+  select(region, sort(names(.)[-1])) %>%
+  arrange(region)
+
+# SMD-year balance for years with mixed-member elections
+balance_oik <- elec_all %>%
+  filter(year %in% c(2003, 2016, 2021)) %>%
+  distinct(region, oik, oik_name, year) %>%
+  mutate(present = "✓") %>%
+  pivot_wider(names_from = year, values_from = present, values_fill = "") %>%
+  select(region, oik, oik_name, sort(names(.)[!(names(.) %in% c("region", "oik", "oik_name"))])) %>%
+  arrange(region, oik, oik_name)
+
+# TIK-year balance for in-person voting
+balance_tik <- elec_all %>%
+  distinct(region, tik, year) %>%
+  filter(tik != "online_voting") %>%
+  mutate(present = "✓") %>%
+  pivot_wider(names_from = year, values_from = present, values_fill = "") %>%
+  select(region, tik, sort(names(.)[!(names(.) %in% c("region", "tik"))])) %>%
+  arrange(region, tik)
+
+rm(balance_regions, balance_oik, balance_tik)
+
+# 7. Make a cross-walk for inter-TIK transfers ----
+cross_tik_lookup <- tribble(
+  # a manually verified list for transfers that do not dissolve the donor TIK (to be used later for matching)
+  ~old_year, ~new_year, ~region_from, ~tik_from, ~region_to, ~tik_to,
+  # 2000-2003
+  "2000", "2003", "Алтайский край", "Барнаул, Ленинская", "Алтайский край", "Барнаул, Индустриальная",
+  "2000", "2003", "Свердловская область", "Екатеринбург, Октябрьская", "Свердловская область", "Екатеринбург, Кировская",
+  "2000", "2003", "Курганская область", "Курган, Западная", "Курганская область", "Курган, Восточная",
+  # 2003-2004
+  "2003", "2004", "Ульяновская область", "Ульяновская", "Ульяновская область", "Новоульяновская",
+  "2003", "2004", "Республика Дагестан", "Цунтинская", "Республика Дагестан", "Бежтинская",
+  # 2004-2007
+  "2004", "2007", "Томская область", "Томская", "Томская область", "Томск, Кировская",
+  "2004", "2007", "Томская область", "Томская", "Томская область", "Томск, Октябрьская",
+  "2004", "2007", "Республика Марий Эл", "Йошкар-Олинская городская", "Республика Марий Эл", "Медведевская",
+  "2004", "2007", "Карачаево-Черкесская Республика", "Карачаевская", "Карачаево-Черкесская Республика", "Абазинская",
+  "2004", "2007", "Карачаево-Черкесская Республика", "Хабезская", "Карачаево-Черкесская Республика", "Абазинская",
+  "2004", "2007", "Иркутская область", "Черемховская городская", "Иркутская область", "Свирская",
+  # 2008-2011
+  "2008", "2011", "Кемеровская область - Кузбасс", "Осинниковская городская", "Кемеровская область - Кузбасс", "Калтанская городская",
+  "2008", "2011", "Новосибирская область", "Барабинская", "Новосибирская область", "Куйбышевская",
+  "2008", "2011", "город Санкт-Петербург", "24", "город Санкт-Петербург", "5",
+  # 2012-2016
+  "2012", "2016", "Московская область", "Ленинская", "город Москва", "Новомосковская",
+  "2012", "2016", "Московская область", "Наро-Фоминская", "город Москва", "Троицкая",
+  "2012", "2016", "Московская область", "Подольская", "город Москва", "Троицкая",
+  "2012", "2016", "город Санкт-Петербург", "3", "город Санкт-Петербург", "7",
+  # 2018-2021
+  "2018", "2021", "Саратовская область", "Саратов, Гагаринская", "Саратовская область", "Саратов, Заводская",
+  "2018", "2021", "Нижегородская область", "Богородская", "Нижегородская область", "Нижний Новгород, Советская",
+  "2018", "2021", "Ямало-Ненецкий автономный округ", "Пуровская", "Ямало-Ненецкий автономный округ", "Губкинская городская",
+  "2018", "2021", "Калужская область", "Калуга, Октябрьская", "Калужская область", "Калуга, Московская",
+  "2018", "2021", "Московская область", "Щелковская", "Московская область", "Лосино-Петровская",
+  "2018", "2021", "Чеченская Республика", "Грозненская", "Чеченская Республика", "Грозный городская",
+  "2018", "2021", "Чеченская Республика", "Грозненская", "Чеченская Республика", "Аргун городская",
+  "2018", "2021", "Чеченская Республика", "Грозненская", "Чеченская Республика", "Урус-Мартановская",
+  "2018", "2021", "Чеченская Республика", "Грозненская", "Чеченская Республика", "Ачхой-Мартановская",
+  "2018", "2021", "Чеченская Республика", "Грозненская", "Чеченская Республика", "Шатойская",
+  # 2021-2024
+  "2021", "2024", "Тамбовская область", "Тамбовская", "Тамбовская область", "Тамбов, Советская",
+  "2021", "2024", "Тамбовская область", "Тамбов, Октябрьская", "Тамбовская область", "Тамбов, Ленинская"
+  # 2024-2026: to be filled after the first run of 02_check_flag_precinct_missingness_2026.R (see data/02_flag_summary_by_year.csv)
+)
+
+# 8. Add analytic variables ----
+elec_all <- elec_all %>%
+  mutate(turnout = turnout_early + turnout_offsite + turnout_onsite,
+         turnout_rate = 100 * turnout / electorate) %>%
+  # party / candidate vote shares
+  mutate(across(all_of(c("Putin", "Medvedev", 'UR')), ~ as.numeric(.x) / turnout, .names = "{.col}_share"))
+
+# 9. Translate ----
+elec_all$tik_eng <- stri_trans_general(elec_all$tik, "Russian-Latin/BGN") # Transliterating TIK names
+
+elec_all$region_eng <- recode(elec_all$region, # Creating a variable with English region names
+
+                              "Республика Адыгея (Адыгея)" = "Republic of Adygea",
+                              "Республика Алтай" = "Altai Republic",
+                              "Республика Башкортостан" = "Republic of Bashkortostan",
+                              "Республика Бурятия" = "Republic of Buryatia",
+                              "Республика Дагестан" = "Republic of Dagestan",
+                              "Республика Ингушетия" = "Republic of Ingushetia",
+                              "Кабардино-Балкарская Республика" = "Kabardino-Balkarian Republic",
+                              "Республика Калмыкия" = "Republic of Kalmykia",
+                              "Карачаево-Черкесская Республика" = "Karachay-Cherkess Republic",
+                              "Республика Карелия" = "Republic of Karelia",
+                              "Республика Коми" = "Komi Republic",
+                              "Республика Марий Эл" = "Mari El Republic",
+                              "Республика Мордовия" = "Republic of Mordovia",
+                              "Республика Северная Осетия - Алания" = "Republic of North Ossetia-Alania",
+                              "Республика Татарстан (Татарстан)" = "Republic of Tatarstan",
+                              "Республика Тыва" = "Tuva Republic",
+                              "Удмуртская Республика" = "Udmurt Republic",
+                              "Республика Хакасия" = "Republic of Khakassia",
+                              "Чувашская Республика - Чувашия" = "Chuvash Republic",
+                              "Алтайский край" = "Altai Krai",
+                              "Краснодарский край" = "Krasnodar Krai",
+                              "Красноярский край" = "Krasnoyarsk Krai",
+                              "Приморский край" = "Primorsky Krai",
+                              "Ставропольский край" = "Stavropol Krai",
+                              "Хабаровский край" = "Khabarovsk Krai",
+                              "Амурская область" = "Amur Oblast",
+                              "Архангельская область" = "Arkhangelsk Oblast",
+                              "Астраханская область" = "Astrakhan Oblast",
+                              "Белгородская область" = "Belgorod Oblast",
+                              "Брянская область" = "Bryansk Oblast",
+                              "Владимирская область" = "Vladimir Oblast",
+                              "Волгоградская область" = "Volgograd Oblast",
+                              "Вологодская область" = "Vologda Oblast",
+                              "Воронежская область" = "Voronezh Oblast",
+                              "Ивановская область" = "Ivanovo Oblast",
+                              "Иркутская область" = "Irkutsk Oblast",
+                              "Калининградская область" = "Kaliningrad Oblast",
+                              "Калужская область" = "Kaluga Oblast",
+                              "Камчатский край" = "Kamchatka Krai",
+                              "Кемеровская область - Кузбасс" = "Kemerovo Oblast - Kuzbass",
+                              "Кировская область" = "Kirov Oblast",
+                              "Костромская область" = "Kostroma Oblast",
+                              "Курганская область" = "Kurgan Oblast",
+                              "Курская область" = "Kursk Oblast",
+                              "Ленинградская область" = "Leningrad Oblast",
+                              "Липецкая область" = "Lipetsk Oblast",
+                              "Магаданская область" = "Magadan Oblast",
+                              "Московская область" = "Moscow Oblast",
+                              "город Москва" = "Moscow",
+                              "Мурманская область" = "Murmansk Oblast",
+                              "Нижегородская область" = "Nizhny Novgorod Oblast",
+                              "Новгородская область" = "Novgorod Oblast",
+                              "Новосибирская область" = "Novosibirsk Oblast",
+                              "Омская область" = "Omsk Oblast",
+                              "Оренбургская область" = "Orenburg Oblast",
+                              "Орловская область" = "Oryol Oblast",
+                              "Пензенская область" = "Penza Oblast",
+                              "Пермский край" = "Perm Krai",
+                              "Псковская область" = "Pskov Oblast",
+                              "Ростовская область" = "Rostov Oblast",
+                              "Рязанская область" = "Ryazan Oblast",
+                              "Самарская область" = "Samara Oblast",
+                              "Саратовская область" = "Saratov Oblast",
+                              "Сахалинская область" = "Sakhalin Oblast",
+                              "Свердловская область" = "Sverdlovsk Oblast",
+                              "Смоленская область" = "Smolensk Oblast",
+                              "Тамбовская область" = "Tambov Oblast",
+                              "Тверская область" = "Tver Oblast",
+                              "Томская область" = "Tomsk Oblast",
+                              "Тульская область" = "Tula Oblast",
+                              "Тюменская область" = "Tyumen Oblast",
+                              "Ульяновская область" = "Ulyanovsk Oblast",
+                              "Челябинская область" = "Chelyabinsk Oblast",
+                              "Забайкальский край" = "Zabaykalsky Krai",
+                              "Ярославская область" = "Yaroslavl Oblast",
+                              "город Санкт-Петербург" = "Saint Petersburg",
+                              "Еврейская автономная область" = "Jewish Autonomous Oblast",
+                              "Ненецкий автономный округ" = "Nenets Autonomous Okrug",
+                              "Ханты-Мансийский автономный округ - Югра" = "Khanty-Mansi Autonomous Okrug – Yugra",
+                              "Чукотский автономный округ" = "Chukotka Autonomous Okrug",
+                              "Ямало-Ненецкий автономный округ" = "Yamalo-Nenets Autonomous Okrug",
+                              "Республика Саха (Якутия)" = "Sakha Republic (Yakutia)",
+                              "Чеченская Республика" = "Chechen Republic",
+                              "98 Город Байконур (Республика Казахстан)" = "Baikonur (Republic of Kazakhstan)",
+                              "99 Территория за пределами РФ" = "Territory outside Russia"
+)
+
+# 10. Save the result ----
+
+# Split offline vs online voting to work only with precincts for harmonization
+elec_offline <- elec_all %>% filter(tik != "online_voting")
+elec_online  <- elec_all %>% filter(tik == "online_voting")
+
+saveRDS(elec_offline, file = "data/01_elec_offline.rds")
+cat("Saved data/01_elec_offline.rds\n")
+cat("Rows:", nrow(elec_offline), "Columns:", ncol(elec_offline), "\n")
+
+saveRDS(elec_online,  file = "data/01_elec_online.rds")
+cat("Saved data/01_elec_online.rds\n")
+cat("Rows:", nrow(elec_online), "Columns:", ncol(elec_online), "\n")
+
+saveRDS(cross_tik_lookup, "data/01_cross_tik_lookup.rds")
+cat("Saved data/01_cross_tik_lookup.rds\n")
